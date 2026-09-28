@@ -15,7 +15,7 @@
 
 ## Синхронизация (ручная)
 
-Полный replace карты через staging:
+Инкрементальный upsert карты через staging (частый sync не сбрасывает `feature_classes`):
 
 ```bash
 # все карты
@@ -32,7 +32,7 @@ POST /api/sync
 POST /api/sync/{map_id}
 ```
 
-Алгоритм: bounds карты → квадрантное дробление bbox при `truncated` → сырые features в `features_staging` → swap в `features` + обновление `maps`/`layers`. Полигоны отбрасываются.
+Алгоритм: bounds карты → квадрантное дробление bbox при `truncated` → сырые features в `features_staging` → upsert в `features` + delete id, которых нет в этом прогоне + обновление `maps`/`layers`. Полигоны отбрасываются. У сохранившихся линий строки в `feature_classes` остаются (каскад только при удалении feature). Пустая карта в GIS (`MAP_EMPTY`) по-прежнему чистит все features карты.
 
 ## Чтение features из PG
 
@@ -81,6 +81,8 @@ docker compose exec api python -m app.sync --icons-only
 - `feature_classes(feature_id, class_name)` — multi-label для линий.
 
 Порядок: сначала обычный sync (features → icons), затем отдельно classify.
+Частый sync и classify раз в сутки совместимы: sync не трогает классы выживших линий.
+Новые линии без классов до следующего classify не попадут в `backbone`-фильтр на низком zoom.
 
 Классификация **не** входит в общий sync. Запуск только командой:
 

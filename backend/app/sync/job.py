@@ -105,6 +105,7 @@ class MapSyncService:
         stats: dict[str, Any] = {
             "cells": 0,
             "features_upserted": 0,
+            "features_deleted": 0,
             "points": 0,
             "lines": 0,
             "skipped_polygons": 0,
@@ -175,9 +176,9 @@ class MapSyncService:
                             int(layer.get("count") or 0),
                             int(layer.get("version") or 0),
                         )
-                    await conn.execute(
-                        "DELETE FROM features WHERE map_id = $1::uuid", map_id
-                    )
+                    # Upsert first, then drop ids missing from this run.
+                    # Surviving rows keep feature_classes (ON DELETE CASCADE
+                    # only fires for the anti-join delete below).
                     await conn.execute(
                         """
                         INSERT INTO features(
@@ -201,6 +202,23 @@ class MapSyncService:
                             updated_at = now()
                         """,
                         run_id,
+                    )
+                    deleted_status = await conn.execute(
+                        """
+                        DELETE FROM features f
+                        WHERE f.map_id = $1::uuid
+                          AND NOT EXISTS (
+                                SELECT 1
+                                FROM features_staging s
+                                WHERE s.sync_run_id = $2
+                                  AND s.id = f.id
+                              )
+                        """,
+                        map_id,
+                        run_id,
+                    )
+                    stats["features_deleted"] = (
+                        int(deleted_status.split()[-1]) if deleted_status else 0
                     )
                     await conn.execute(
                         "DELETE FROM features_staging WHERE sync_run_id = $1", run_id
