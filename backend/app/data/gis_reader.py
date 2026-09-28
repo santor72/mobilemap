@@ -37,17 +37,17 @@ class GisReader:
         self._cache_dir.mkdir(parents=True, exist_ok=True)
 
     async def _overview_icon_ids(self, zoom: int) -> set[str] | None:
-        """Resolve GIS_POINT_OVERVIEW_ICONS → icon UUID set, or None if inactive/unavailable."""
-        if not self._settings.overview_icon_filter_active(zoom):
+        """Resolve overview allowlist for zoom → icon UUID set, or None if inactive."""
+        names = self._settings.point_overview_allowlist(zoom)
+        if names is None:
             return None
-        names = self._settings.point_overview_icons
         try:
             from app.db import get_pool
 
             pool = get_pool()
         except RuntimeError:
             logger.warning(
-                "GIS_POINT_OVERVIEW_ICONS is set but DB pool is unavailable; "
+                "Overview icon filter is active but DB pool is unavailable; "
                 "skipping overview icon filter"
             )
             return None

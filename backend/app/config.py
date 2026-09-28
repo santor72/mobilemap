@@ -1,7 +1,7 @@
 from functools import lru_cache
 import re
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -72,6 +72,12 @@ class Settings(BaseSettings):
     gis_timeout_seconds: float = Field(default=20.0, alias="GIS_TIMEOUT_SECONDS")
 
     gis_point_detail_zoom: int = Field(default=15, alias="GIS_POINT_DETAIL_ZOOM")
+    # Optional mid LOD: when set with GIS_POINT_OVERVIEW_ICONS_SECOND (must be < DETAIL),
+    # zoom >= SECOND → first ∪ second; zoom >= DETAIL → all points.
+    # First list (OVERVIEW_ICONS) stays visible at every zoom (subset of later rungs).
+    gis_point_detail_zoom_second: int | None = Field(
+        default=None, alias="GIS_POINT_DETAIL_ZOOM_SECOND"
+    )
     gis_point_icon_size: int = Field(default=32, alias="GIS_POINT_ICON_SIZE")
     gis_point_circle_size: int = Field(default=22, alias="GIS_POINT_CIRCLE_SIZE")
     gis_point_fixed_size_max_zoom: int = Field(
@@ -80,9 +86,12 @@ class Settings(BaseSettings):
     # When true: always GIS_POINT_ICON_SIZE / CIRCLE_SIZE (ignore zoom + iconScale)
     gis_point_icon_fixed: bool = Field(default=False, alias="GIS_POINT_ICON_FIXED")
     gis_max_point_count: int = Field(default=300, alias="GIS_MAX_POINT_COUNT")
-    # Comma-separated icon_name allowlist for overview (zoom < GIS_POINT_DETAIL_ZOOM).
-    # Empty = all icons. Requires icon_uuid rows after sync/icons.
+    # Comma-separated icon_name allowlist always included while filter is on.
+    # Empty = no overview filter below DETAIL. Requires icon_uuid after sync/icons.
     gis_point_overview_icons: str = Field(default="", alias="GIS_POINT_OVERVIEW_ICONS")
+    gis_point_overview_icons_second: str = Field(
+        default="", alias="GIS_POINT_OVERVIEW_ICONS_SECOND"
+    )
 
     gis_max_line_vertices: int = Field(default=5000, alias="GIS_MAX_LINE_VERTICES")
     gis_line_simplify_meters: str = Field(
@@ -120,6 +129,15 @@ class Settings(BaseSettings):
     sync_icons: bool = Field(default=True, alias="SYNC_ICONS")
     line_class_tolerance_m: float = Field(default=20.0, alias="LINE_CLASS_TOLERANCE_M")
 
+    @field_validator("gis_point_detail_zoom_second", mode="before")
+    @classmethod
+    def _empty_second_zoom(cls, value: object) -> object:
+        if value is None or value == "":
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
     @property
     def simplify_table(self) -> list[tuple[int, float]]:
         return parse_simplify_table(self.gis_line_simplify_meters)
@@ -128,9 +146,59 @@ class Settings(BaseSettings):
     def point_overview_icons(self) -> list[str]:
         return parse_icon_name_list(self.gis_point_overview_icons)
 
+    @property
+    def point_overview_icons_second(self) -> list[str]:
+        return parse_icon_name_list(self.gis_point_overview_icons_second)
+
+    @property
+    def point_second_lod_active(self) -> bool:
+        """Mid overview rung: SECOND icons set and SECOND zoom strictly below DETAIL."""
+        z2 = self.gis_point_detail_zoom_second
+        return (
+            bool(self.point_overview_icons_second)
+            and z2 is not None
+            and z2 < self.gis_point_detail_zoom
+        )
+
+    def point_overview_allowlist(self, zoom: int) -> list[str] | None:
+        """icon_name allowlist for zoom, or None if no filter (all points).
+
+        Progressive reveal (earlier lists stay visible at higher zooms):
+          zoom >= DETAIL → None (all points)
+          zoom >= SECOND (if mid LOD on) → first ∪ second
+          else if first non-empty → first
+          else → None
+        """
+        z_detail = self.gis_point_detail_zoom
+        if zoom >= z_detail:
+            return None
+
+        first = self.point_overview_icons
+        second = self.point_overview_icons_second
+        if self.point_second_lod_active:
+            z2 = self.gis_point_detail_zoom_second
+            assert z2 is not None
+            if zoom >= z2:
+                seen: set[str] = set()
+                out: list[str] = []
+                for name in [*first, *second]:
+                    if name not in seen:
+                        seen.add(name)
+                        out.append(name)
+                return out if out else None
+        if first:
+            return first
+        return None
+
     def overview_icon_filter_active(self, zoom: int) -> bool:
         """True when overview icon allowlist should restrict points."""
-        return bool(self.point_overview_icons) and zoom < self.gis_point_detail_zoom
+        return self.point_overview_allowlist(zoom) is not None
+
+    def points_interactive_at_zoom(self, zoom: int) -> bool:
+        """Whether point markers should accept clicks at this zoom."""
+        if self.point_overview_allowlist(zoom) is not None:
+            return True
+        return zoom >= self.gis_point_detail_zoom
 
     @property
     def line_classes_table(self) -> list[tuple[int, LineClassMode]]:

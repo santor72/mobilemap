@@ -4,13 +4,17 @@ export type AppConfig = {
   map_provider: string;
   yandex_maps_api_key: string;
   point_detail_zoom: number;
+  /** Mid LOD zoom: SECOND icons appear from here; must be < point_detail_zoom. */
+  point_detail_zoom_second?: number | null;
   point_icon_size: number;
   point_circle_size: number;
   point_fixed_size_max_zoom: number;
   /** When true, icons/circles always use GIS_POINT_*_SIZE (no zoom/iconScale). */
   icon_fixed?: boolean;
-  /** GIS_POINT_OVERVIEW_ICONS; non-empty → those points are clickable at any zoom. */
+  /** GIS_POINT_OVERVIEW_ICONS; visible at every zoom (alone below mid/full detail). */
   point_overview_icons?: string[];
+  /** GIS_POINT_OVERVIEW_ICONS_SECOND; visible from point_detail_zoom_second upward. */
+  point_overview_icons_second?: string[];
   max_point_count: number;
   max_line_vertices: number;
   initial_radius_km: number;
@@ -20,6 +24,39 @@ export type AppConfig = {
   tile_z_max?: number;
   line_tile_poles_layer_name?: string;
 };
+
+/** Mirror backend Settings.point_overview_allowlist / points_interactive_at_zoom. */
+function pointOverviewAllowlist(
+  config: AppConfig,
+  zoom: number,
+): string[] | null {
+  const zDetail = config.point_detail_zoom;
+  if (zoom >= zDetail) return null;
+
+  const z2 = config.point_detail_zoom_second;
+  const first = config.point_overview_icons ?? [];
+  const second = config.point_overview_icons_second ?? [];
+  const secondActive =
+    second.length > 0 && z2 != null && Number.isFinite(z2) && z2 < zDetail;
+
+  if (secondActive && zoom >= z2!) {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const name of [...first, ...second]) {
+      if (!seen.has(name)) {
+        seen.add(name);
+        out.push(name);
+      }
+    }
+    return out.length ? out : null;
+  }
+  return first.length > 0 ? first : null;
+}
+
+export function pointsInteractiveAtZoom(config: AppConfig, zoom: number): boolean {
+  if (pointOverviewAllowlist(config, zoom) != null) return true;
+  return zoom >= config.point_detail_zoom;
+}
 
 export type MapRow = {
   id: string;

@@ -37,7 +37,7 @@ POST /api/sync/{map_id}
 ## Чтение features из PG
 
 - `ST_Intersects` + GIST
-- точки: при zoom < `GIS_POINT_DETAIL_ZOOM` и непустом `GIS_POINT_OVERVIEW_ICONS` — только `icon_name` из списка (`icon_uuid`). При zoom ≤ `GIS_POINT_FIXED_SIZE_MAX_ZOOM` и `GIS_MAX_POINT_COUNT` > 0 — сетка по bbox (cols×rows ≤ лимита): одна точка на клетку, ближайшая к центру; GeoJSON только у отобранных; `thinned`, если кандидатов больше ответа. `0` — без лимита. GIS-прокси режет уже полученный ответ той же сеткой в Python.
+- точки: allowlist по `GIS_POINT_OVERVIEW_ICONS` / опционально `_SECOND` и порогам DETAIL / DETAIL_SECOND (docs/points.md). При zoom ≤ `GIS_POINT_FIXED_SIZE_MAX_ZOOM` и `GIS_MAX_POINT_COUNT` > 0 — сетка по bbox (cols×rows ≤ лимита): одна точка на клетку, ближайшая к центру; GeoJSON только у отобранных; `thinned`, если кандидатов больше ответа. `0` — без лимита. GIS-прокси режет уже полученный ответ той же сеткой в Python.
 - линии: `ST_Simplify` по той же таблице метров/`zoom`, затем бюджет вершин
 
 ## Иконки (`icon_uuid` + `icon_masks`)

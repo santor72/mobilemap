@@ -1,6 +1,13 @@
 import "./style.css";
 import { clearAuth, loadAuth, saveAuth, authHeader, type BasicAuth } from "./auth";
-import { createApi, ApiError, type Api, type AppConfig, type LayerRow } from "./api/client";
+import {
+  createApi,
+  ApiError,
+  pointsInteractiveAtZoom,
+  type Api,
+  type AppConfig,
+  type LayerRow,
+} from "./api/client";
 import { createMapProvider, type MapProvider, type Viewport } from "./map";
 import {
   loadLayerIds,
@@ -290,10 +297,8 @@ async function refreshFeatures(): Promise<void> {
     );
     if (controller.signal.aborted || generation !== renderGeneration) return;
 
-    // Overview allowlist points are the only markers below detail zoom → always clickable.
-    const interactive =
-      viewport.zoom >= config.point_detail_zoom ||
-      (config.point_overview_icons?.length ?? 0) > 0;
+    // Allowlisted overview points are clickable; full set after detail / second threshold.
+    const interactive = pointsInteractiveAtZoom(config, viewport.zoom);
     await mapProvider.renderFeatures(data, {
       interactivePoints: interactive,
       onPointClick: (id) => void openCard(id),

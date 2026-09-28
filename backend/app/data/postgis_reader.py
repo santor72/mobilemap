@@ -122,8 +122,9 @@ class PostgisReader:
             layer_sql = f"AND layer_id = ANY(${len(params)}::uuid[])"
 
         icon_sql = ""
-        if self._settings.overview_icon_filter_active(zoom):
-            params.append(self._settings.point_overview_icons)
+        allowlist = self._settings.point_overview_allowlist(zoom)
+        if allowlist is not None:
+            params.append(allowlist)
             icon_sql = f"""
               AND EXISTS (
                     SELECT 1 FROM icon_uuid iu

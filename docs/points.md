@@ -1,7 +1,12 @@
 Переменные окружения и поведение слоев точек
 
-- `GIS_POINT_DETAIL_ZOOM=15` — zoom ≥ порога: все точки интерактивны (карточка). Ниже и без `GIS_POINT_OVERVIEW_ICONS` — только показ.
-- `GIS_POINT_OVERVIEW_ICONS=` — CSV `icon_name` (из `icon_uuid`). Если не пусто и zoom < `GIS_POINT_DETAIL_ZOOM`, в `/features` отдаются только точки с этими именами; они кликабельны на любом zoom (порог `GIS_POINT_DETAIL_ZOOM` для них не действует). Пусто = без фильтра и без клика ниже detail. Нужен sync/icons.
+- `GIS_POINT_OVERVIEW_ICONS=` — CSV `icon_name` (из `icon_uuid`). Эти точки видны на **любом** zoom (пока фильтр ещё режет набор — только они; после полного detail — как часть всех). Кликабельны, пока отдаются allowlist’ом. Пусто = нет overview-фильтра ниже detail. Нужен sync/icons.
+- `GIS_POINT_DETAIL_ZOOM=15` — zoom ≥ порога → **все** точки, все кликабельны.
+- `GIS_POINT_DETAIL_ZOOM_SECOND=` + `GIS_POINT_OVERVIEW_ICONS_SECOND=` — опциональная средняя ступень (оба нужны, **SECOND < DETAIL**):
+  - `zoom < SECOND` — только первый список;
+  - `SECOND ≤ zoom < DETAIL` — первый ∪ второй (первый не пропадает);
+  - `zoom ≥ DETAIL` — все точки.
+  Без SECOND — как раньше: ниже DETAIL только первый список (если задан), с DETAIL — все.
 - `GIS_POINT_ICON_SIZE=32` — размер значков на экране (px), квадрат. Не из пикселей PNG.
 - `GIS_POINT_CIRCLE_SIZE=22` — диаметр маркеров без `iconId` (px).
 - `GIS_POINT_FIXED_SIZE_MAX_ZOOM=15` — пока zoom ≤ порога, `iconScale` из GIS игнорируется. Выше — база × `iconScale` (clamp 0.5–3). Не используется, если включён `GIS_POINT_ICON_FIXED`.

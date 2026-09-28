@@ -60,12 +60,22 @@ async def public_config(
         "map_provider": settings.map_provider,
         "yandex_maps_api_key": settings.yandex_maps_api_key,
         "point_detail_zoom": settings.gis_point_detail_zoom,
+        "point_detail_zoom_second": (
+            settings.gis_point_detail_zoom_second
+            if settings.point_second_lod_active
+            else None
+        ),
         "point_icon_size": settings.gis_point_icon_size,
         "point_circle_size": settings.gis_point_circle_size,
         "point_fixed_size_max_zoom": settings.gis_point_fixed_size_max_zoom,
         "icon_fixed": settings.gis_point_icon_fixed,
-        # Non-empty → overview points stay clickable below point_detail_zoom
+        # Non-empty → overview points stay clickable while allowlist filter is on
         "point_overview_icons": settings.point_overview_icons,
+        "point_overview_icons_second": (
+            settings.point_overview_icons_second
+            if settings.point_second_lod_active
+            else []
+        ),
         "max_point_count": settings.gis_max_point_count,
         "max_line_vertices": settings.gis_max_line_vertices,
         "initial_radius_km": settings.gis_initial_radius_km,

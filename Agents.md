@@ -26,12 +26,12 @@
 В приложении может быть несколько таких модулей. Выбор модуля определяется настройкой из .env файла.
 Для производительности и читаемости 
  - Слои точек: размер GIS_POINT_ICON_SIZE / CIRCLE; до GIS_POINT_FIXED_SIZE_MAX_ZOOM без iconScale; либо GIS_POINT_ICON_FIXED=true — всегда фиксированный размер (docs/points.md)
- - До определенного зума точки не интерактивные (исключение: GIS_POINT_OVERVIEW_ICONS — клик всегда)
+ - До определенного зума точки не интерактивные (исключение: overview allowlist — клик пока фильтр активен; опционально GIS_POINT_*_SECOND)
  - Точки: полный refetch по viewport; на клиенте diff по id (add/remove/patch size·interactive), без removeAll
  - Точки и линии добавляются порциями с отменой при смене viewport / новом запросе; векторные линии пока full replace
  - Данные запрашиваются в рамках текущего zoom + bounds; debounce жеста; abort устаревшего fetch
  - Два ObjectManager (точки и линии), clusterize: false; иконки по iconId (уникальных ~десяток, кэш по id); локальные маски+glyph_color → composed PNG (docs/postgis.md)
- - Точки при малом zoom: лимит GIS_MAX_POINT_COUNT, отбор сеткой по bbox (одна точка на клетку); опционально GIS_POINT_OVERVIEW_ICONS (docs/points.md)
+ - Точки при малом zoom: лимит GIS_MAX_POINT_COUNT, отбор сеткой по bbox (одна точка на клетку); опционально GIS_POINT_OVERVIEW_ICONS / _SECOND (docs/points.md)
  - Линии (текущий runtime): упрощение по zoom + бюджет GIS_MAX_LINE_VERTICES; приоритет backbone → остальное; PostGIS LOD классов GIS_LINE_CLASSES_BY_ZOOM (docs/lines.md)
  - Линии (целевая модель, docs/line-tiles.md): `LINE_RENDER=vector|raster`; raster = WebP 256 + @2x 512, Cairo, volume→api, два слоя network/poles (poles default off), versioned URL, `--tiles-only` вручную + lazy-render на GET; /features при raster отдаёт линии `[]`; сначала yandex21
  - Включение raster: сгенерировать `python -m app.sync --tiles-only`, в `.env` `LINE_RENDER=raster` и `MAP_PROVIDER=yandex21`, перезапуск api/web
@@ -41,7 +41,7 @@
 
 На карте отражаем только точки и линии.
 Полигоны отбрасываем. 
-Для MVP: линии всегда (simplify + budget + class LOD в postgis); карточка по клику у точек при zoom ≥ GIS_POINT_DETAIL_ZOOM, а также у GIS_POINT_OVERVIEW_ICONS на любом zoom.
+Для MVP: линии всегда (simplify + budget + class LOD в postgis); карточка по клику у точек при zoom ≥ GIS_POINT_DETAIL_ZOOM, а также у точек из overview-allowlist пока фильтр активен (включая mid-LOD SECOND).
 
 ## Провайдера
 
