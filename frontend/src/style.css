@@ -1,0 +1,235 @@
+:root {
+  color-scheme: light;
+  --bg: #0f1419;
+  --panel: #1a222c;
+  --text: #e8eef4;
+  --muted: #9aa7b5;
+  --accent: #3d8bfd;
+  --danger: #e35d6a;
+  --border: #2c3846;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.login {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.login-card {
+  width: min(100%, 22rem);
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.login-card h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.login-card label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.login-card input {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #10161d;
+  color: var(--text);
+}
+
+.login-card button {
+  margin-top: 0.25rem;
+  padding: 0.7rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.shell {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: relative;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.6rem;
+  background: rgba(15, 20, 25, 0.92);
+  border-bottom: 1px solid var(--border);
+  z-index: 2;
+}
+
+.control.compact {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.control.compact label {
+  margin-right: 0.35rem;
+  color: var(--muted);
+}
+
+.control.compact select {
+  max-width: 10rem;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+}
+
+.control.compact summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--text);
+}
+
+.control.compact summary::-webkit-details-marker {
+  display: none;
+}
+
+.layers-list {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 40vh;
+  overflow: auto;
+  padding: 0.4rem 0 0.2rem;
+  min-width: 12rem;
+}
+
+.line-tiles-list {
+  border-bottom: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.45rem;
+  max-height: none;
+}
+
+.line-tiles-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.layers-list label {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  color: var(--text);
+}
+
+.status {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--muted);
+  max-width: 40%;
+  text-align: right;
+}
+
+.status.warn {
+  color: #e0b44c;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.card {
+  position: absolute;
+  left: 0.6rem;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  max-height: 40%;
+  overflow: auto;
+  background: rgba(26, 34, 44, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  z-index: 3;
+}
+
+.card h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.card p {
+  margin: 0.25rem 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
+.card .close {
+  float: right;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.mm-marker {
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.mm-marker--interactive {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.mm-marker--circle {
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.mm-marker img {
+  display: block;
+  pointer-events: none;
+}

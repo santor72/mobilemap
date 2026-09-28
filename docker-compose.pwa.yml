@@ -1,0 +1,15 @@
+# docker compose -f docker-compose.yml -f docker-compose.pwa.yml up -d
+# Requires Docker Compose supporting !reset.
+services:
+  api:
+    ports: !reset []
+    networks:
+      default: {}
+      pwa:
+        aliases:
+          - mobilemap-api
+
+networks:
+  pwa:
+    name: tp-mobilemap
+    external: true

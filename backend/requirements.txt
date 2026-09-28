@@ -1,0 +1,10 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+httpx==0.28.1
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+asyncpg==0.30.0
+openai==1.59.6
+pycairo==1.27.0
+Pillow==11.1.0
+mercantile==1.2.1

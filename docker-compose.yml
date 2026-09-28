@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: mobilemap
+      POSTGRES_PASSWORD: mobilemap
+      POSTGRES_DB: mobilemap
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mobilemap -d mobilemap"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    env_file:
+      - .env
+    environment:
+      ASSET_CACHE_DIR: /var/cache/mobilemap-assets
+      TILE_CACHE_DIR: /var/lib/mobilemap/tiles
+      DATABASE_URL: postgresql://mobilemap:mobilemap@db:5432/mobilemap
+    volumes:
+      - ./asset_cache:/var/cache/mobilemap-assets
+      - ./tile_cache:/var/lib/mobilemap/tiles
+    ports:
+      - "8083:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    ports:
+      - "8084:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  asset_cache:
+  tile_cache:
+  pgdata:
